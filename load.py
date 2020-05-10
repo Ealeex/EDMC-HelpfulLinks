@@ -22,7 +22,6 @@ class LinkOption:
 
 
 def callback(url):
-    print('Now Opening: {}'.format(url))
     webbrowser.open_new(url)
 
 
@@ -34,20 +33,25 @@ def plugin_prefs(parent, cmdr, is_beta):
     nb.Label(frame, text='Name').grid(row=0,column=2,padx=4,pady=4,sticky=tk.W)
     nb.Label(frame, text='Link').grid(row=0,column=3,padx=4,pady=4,sticky=tk.W)
     for i in range(14):
+
         link_Enabled = tk.IntVar(value='0')
-        if this.LinkPereferences[i] and this.LinkPereferences[i]['enabled']: link_Enabled = tk.IntVar(value='1')
+        if this.LinkPereferences[i]['enabled']: link_Enabled = tk.IntVar(value='1')
+        name = this.LinkPereferences[i]['name']
+        value = this.LinkPereferences[i]['value']
+
         nb.Label(frame, text=i+1).grid(row=i+1,column=0,padx=4,pady=4,sticky=tk.W)
         link_E = nb.Checkbutton(frame, variable=link_Enabled)
         link_E.grid(row=i+1,column=1,padx=4,pady=4,sticky=tk.W)
         link_N = nb.Entry(frame)
         link_N.grid(row=i+1,column=2,padx=4,pady=4,sticky=tk.W)
         link_N.config(width=25)
-        link_N.insert(0,this.LinkPereferences[i]['name'])
+        link_N.insert(0,name)
         link_V = nb.Entry(frame)
         link_V.grid(row=i+1,column=3,padx=4,pady=4,sticky=tk.W)
         link_V.config(width=25)
-        link_V.insert(0,this.LinkPereferences[i]['value'])
-        this.LinkOptions.append(LinkOption(link_Enabled, link_E, link_N, link_V))   
+        link_V.insert(0,value)
+        this.LinkOptions.append(LinkOption(link_Enabled, link_E, link_N, link_V))  
+
     return frame
 
 
@@ -64,9 +68,19 @@ def prefs_changed(cmdr, is_beta):
 
 
 def plugin_start(plugin_dir):
-    #config.delete('perefs')
-    this.LinkPereferences = json.loads(config.get('perefs') or '[]')
+    this.LinkPereferences = json.loads(config.get('perefs') or json.dumps(initializeSettings()))
     return "HelpfulLinks"
+
+
+def initializeSettings():
+    settings = list()
+    for i in range(14):
+        setting = dict()
+        setting['enabled'] = 0
+        setting['name'] = ''
+        setting['value'] = ''
+        settings.append(setting)
+    return settings
 
 
 def plugin_stop():
