@@ -35,7 +35,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     nb.Label(frame, text='Link').grid(row=0,column=3,padx=4,pady=4,sticky=tk.W)
     for i in range(14):
         link_Enabled = tk.IntVar(value='0')
-        if this.LinkPereferences[i]['enabled']: link_Enabled = tk.IntVar(value='1')
+        if this.LinkPereferences[i] and this.LinkPereferences[i]['enabled']: link_Enabled = tk.IntVar(value='1')
         nb.Label(frame, text=i+1).grid(row=i+1,column=0,padx=4,pady=4,sticky=tk.W)
         link_E = nb.Checkbutton(frame, variable=link_Enabled)
         link_E.grid(row=i+1,column=1,padx=4,pady=4,sticky=tk.W)
