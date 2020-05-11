@@ -2,6 +2,7 @@ try:
     import Tkinter as tk
 except ImportError:
     import tkinter as tk
+import ttk
 import sys
 import myNotebook as nb
 from config import config
@@ -9,10 +10,12 @@ import json
 from ttkHyperlinkLabel import HyperlinkLabel
 import webbrowser
 
-
 this = sys.modules[__name__]
 
+# Global Variables
+totalLinks = 14
 
+# Link Class
 class LinkOption:
     def __init__(self, enabled, enabledElement, nameElement, valueElement):
         self.enabled = enabled
@@ -20,11 +23,18 @@ class LinkOption:
         self.nameElement = nameElement
         self.valueElement = valueElement
 
+# Generates a new list of preferences
+def initializeSettings():
+    settings = list()
+    for i in range(totalLinks):
+        setting = dict()
+        setting['enabled'] = 0
+        setting['name'] = ''
+        setting['value'] = ''
+        settings.append(setting)
+    return settings
 
-def callback(url):
-    webbrowser.open_new(url)
-
-
+# Called when the settings menu is opened
 def plugin_prefs(parent, cmdr, is_beta):
     this.LinkOptions = list()
     frame = nb.Frame(parent)
@@ -32,12 +42,12 @@ def plugin_prefs(parent, cmdr, is_beta):
     nb.Label(frame, text='Enabled').grid(row=0,column=1,padx=4,pady=4,sticky=tk.W)
     nb.Label(frame, text='Name').grid(row=0,column=2,padx=4,pady=4,sticky=tk.W)
     nb.Label(frame, text='Link').grid(row=0,column=3,padx=4,pady=4,sticky=tk.W)
-    for i in range(14):
+    for i in range(totalLinks):
 
         link_Enabled = tk.IntVar(value='0')
-        if this.LinkPereferences[i]['enabled']: link_Enabled = tk.IntVar(value='1')
-        name = this.LinkPereferences[i]['name']
-        value = this.LinkPereferences[i]['value']
+        if this.linkPreferences[i]['enabled']: link_Enabled = tk.IntVar(value='1')
+        name = this.linkPreferences[i]['name']
+        value = this.linkPreferences[i]['value']
 
         nb.Label(frame, text=i+1).grid(row=i+1,column=0,padx=4,pady=4,sticky=tk.W)
         link_E = nb.Checkbutton(frame, variable=link_Enabled)
@@ -54,154 +64,65 @@ def plugin_prefs(parent, cmdr, is_beta):
 
     return frame
 
-
+# Called when the settings menu is closed
 def prefs_changed(cmdr, is_beta):
-    this.LinkPereferences = list()
+    this.linkPreferences = list()
     for linkOpt in this.LinkOptions:
         d = dict()
         d['enabled'] = linkOpt.enabled.get()
         d['name'] = linkOpt.nameElement.get()
         d['value'] = linkOpt.valueElement.get()
-        this.LinkPereferences.append(d)
-    config.set('perefs',json.dumps(this.LinkPereferences))
+        this.linkPreferences.append(d)
+    config.set('prefs',json.dumps(this.linkPreferences))
+    updateMainWindow()
     return
 
+# Updates the main window when called
+def updateMainWindow():
 
+    # Clear all current labels
+    for label in this.linkLabels:
+        label.destroy()
+
+    # Generate a list of active links
+    activeLinks = list()
+    for link in this.linkPreferences:
+        if link and link['enabled'] and link['name'] and link['value']:
+            activeLinks.append(link)
+
+    # Generate new labels based on activeLinks
+    this.linkLabels = list()
+    for link in activeLinks:
+        if link and link['enabled']:
+            this.linkLabels.append(tk.Label(this.frame))
+
+    # Fill the new labels
+    row = 0
+    for label in this.linkLabels:
+        label['text'] = activeLinks[row]['name']
+        label['justify'] = tk.CENTER
+        label['cursor'] = 'hand2'
+        label['fg'] = 'blue'
+        label.bind('<Button-1>',lambda x, url=activeLinks[row]['value']: webbrowser.open_new(url))
+        label.pack()
+        row += 1
+
+    return
+
+# Called when the plugin is started by EDMC
 def plugin_start(plugin_dir):
-    this.LinkPereferences = json.loads(config.get('perefs') or json.dumps(initializeSettings()))
+    this.linkPreferences = json.loads(config.get('prefs') or json.dumps(initializeSettings()))
+    this.linkLabels = list()
     return "HelpfulLinks"
 
-
-def initializeSettings():
-    settings = list()
-    for i in range(14):
-        setting = dict()
-        setting['enabled'] = 0
-        setting['name'] = ''
-        setting['value'] = ''
-        settings.append(setting)
-    return settings
-
-
+# Called when the program is stopped
 def plugin_stop():
     return
 
-
+# Display the main window on the app
 def plugin_app(parent):
-    
-    link = this.LinkPereferences
-    frame = tk.Frame(parent)
+    this.frame = tk.Frame(parent)
+    this.frame.columnconfigure(1, weight=1)
+    updateMainWindow()
+    return this.frame
 
-    # Link 1
-    if link[0]['name'] and link[0]['enabled']:
-        url0 = link[0]['value']
-        label = tk.Label(frame, text=link[0]['name'],justify=tk.CENTER, cursor="hand2")
-        label.grid(row=0)
-        label.pack()
-        label.bind("<Button-1>", lambda urls: callback(url0))
-
-    # Link 2
-    if link[1]['name'] and link[1]['enabled']:
-        url1 = link[1]['value']
-        label = tk.Label(frame, text=link[1]['name'],justify=tk.CENTER, cursor="hand2")
-        label.grid(row=1)
-        label.pack()
-        label.bind("<Button-1>", lambda urls: callback(url1))
-
-    # Link 3
-    if link[2]['name'] and link[2]['enabled']:
-        url2 = link[2]['value']
-        label = tk.Label(frame, text=link[2]['name'],justify=tk.CENTER, cursor="hand2")
-        label.grid(row=2)
-        label.pack()
-        label.bind("<Button-1>", lambda urls: callback(url2))
-
-    # Link 4
-    if link[3]['name'] and link[3]['enabled']:
-        url3 = link[3]['value']
-        label = tk.Label(frame, text=link[3]['name'],justify=tk.CENTER, cursor="hand2")
-        label.grid(row=3)
-        label.pack()
-        label.bind("<Button-1>", lambda urls: callback(url3))
-
-    # Link 5
-    if link[4]['name'] and link[4]['enabled']:
-        url4 = link[4]['value']
-        label = tk.Label(frame, text=link[4]['name'],justify=tk.CENTER, cursor="hand2")
-        label.grid(row=4)
-        label.pack()
-        label.bind("<Button-1>", lambda urls: callback(url4))
-
-    # Link 6
-    if link[5]['name'] and link[5]['enabled']:
-        url5 = link[5]['value']
-        label = tk.Label(frame, text=link[5]['name'],justify=tk.CENTER, cursor="hand2")
-        label.grid(row=5)
-        label.pack()
-        label.bind("<Button-1>", lambda urls: callback(url5))
-
-    # Link 7
-    if link[6]['name'] and link[6]['enabled']:
-        url6 = link[6]['value']
-        label = tk.Label(frame, text=link[6]['name'],justify=tk.CENTER, cursor="hand2")
-        label.grid(row=6)
-        label.pack()
-        label.bind("<Button-1>", lambda urls: callback(url6))
-
-    # Link 8
-    if link[7]['name'] and link[7]['enabled']:
-        url7 = link[7]['value']
-        label = tk.Label(frame, text=link[7]['name'],justify=tk.CENTER, cursor="hand2")
-        label.grid(row=7)
-        label.pack()
-        label.bind("<Button-1>", lambda urls: callback(url7))
-
-    # Link 9
-    if link[8]['name'] and link[8]['enabled']:
-        url8 = link[8]['value']
-        label = tk.Label(frame, text=link[8]['name'],justify=tk.CENTER, cursor="hand2")
-        label.grid(row=8)
-        label.pack()
-        label.bind("<Button-1>", lambda urls: callback(url8))
-
-    # Link 10
-    if link[9]['name'] and link[9]['enabled']:
-        url9 = link[9]['value']
-        label = tk.Label(frame, text=link[9]['name'],justify=tk.CENTER, cursor="hand2")
-        label.grid(row=9)
-        label.pack()
-        label.bind("<Button-1>", lambda urls: callback(url9))
-
-    # Link 11
-    if link[10]['name'] and link[10]['enabled']:
-        url10 = link[10]['value']
-        label = tk.Label(frame, text=link[10]['name'],justify=tk.CENTER, cursor="hand2")
-        label.grid(row=10)
-        label.pack()
-        label.bind("<Button-1>", lambda urls: callback(url10))
-
-    # Link 12
-    if link[11]['name'] and link[11]['enabled']:
-        url11 = link[11]['value']
-        label = tk.Label(frame, text=link[11]['name'],justify=tk.CENTER, cursor="hand2")
-        label.grid(row=11)
-        label.pack()
-        label.bind("<Button-1>", lambda urls: callback(url11))
-
-    # Link 13
-    if link[12]['name'] and link[12]['enabled']:
-        url12 = link[12]['value']
-        label = tk.Label(frame, text=link[12]['name'],justify=tk.CENTER, cursor="hand2")
-        label.grid(row=12)
-        label.pack()
-        label.bind("<Button-1>", lambda urls: callback(url12))
-
-    # Link 14
-    if link[13]['name'] and link[13]['enabled']:
-        url13 = link[13]['value']
-        label = tk.Label(frame, text=link[13]['name'],justify=tk.CENTER, cursor="hand2")
-        label.grid(row=13)
-        label.pack()
-        label.bind("<Button-1>", lambda urls: callback(url13))
-
-    return frame
