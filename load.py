@@ -15,7 +15,7 @@ this = sys.modules[__name__]
 
 # Global Variables
 totalLinks = 14
-version = '1.0.6'
+version = '1.0.7'
 defaultLinks = [
     {'enabled':1,'name':'ED Tutorials','value':'http://www.edtutorials.com'},
     {'enabled':1,'name':'Miner\'s Tool','value':'http://edtools.ddns.net/miner'},
@@ -126,7 +126,8 @@ def updateMainWindow():
 
 # Called when the plugin is started by EDMC
 def plugin_start(plugin_dir):
-    if not config.get('version') or config.get('version') == version: config.delete('prefs') 
+    if not config.get('version') or not config.get('version') == version: 
+        config.delete('prefs') 
     config.set('version',version)
     this.linkPreferences = json.loads(config.get('prefs') or json.dumps(initializeSettings()))
     this.linkLabels = list()
