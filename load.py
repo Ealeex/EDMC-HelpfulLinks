@@ -9,11 +9,18 @@ from config import config
 import json
 from ttkHyperlinkLabel import HyperlinkLabel
 import webbrowser
+from theme import theme
 
 this = sys.modules[__name__]
 
 # Global Variables
 totalLinks = 14
+version = '1.0.6'
+defaultLinks = [
+    {'enabled':1,'name':'ED Tutorials','value':'http://www.edtutorials.com'},
+    {'enabled':1,'name':'Miner\'s Tool','value':'http://edtools.ddns.net/miner'},
+    {'enabled':1,'name':'Engineers','value':'https://inara.cz/galaxy-engineers/'}
+]
 
 # Link Class
 class LinkOption:
@@ -25,8 +32,8 @@ class LinkOption:
 
 # Generates a new list of preferences
 def initializeSettings():
-    settings = list()
-    for i in range(totalLinks):
+    settings = defaultLinks
+    for i in range(totalLinks-len(defaultLinks)):
         setting = dict()
         setting['enabled'] = 0
         setting['name'] = ''
@@ -37,11 +44,18 @@ def initializeSettings():
 # Called when the settings menu is opened
 def plugin_prefs(parent, cmdr, is_beta):
     this.LinkOptions = list()
+
     frame = nb.Frame(parent)
-    nb.Label(frame, text='#').grid(row=0,column=0,padx=4,pady=4,sticky=tk.W)
-    nb.Label(frame, text='Enabled').grid(row=0,column=1,padx=4,pady=4,sticky=tk.W)
-    nb.Label(frame, text='Name').grid(row=0,column=2,padx=4,pady=4,sticky=tk.W)
-    nb.Label(frame, text='Link').grid(row=0,column=3,padx=4,pady=4,sticky=tk.W)
+    headerFrame = nb.Frame(frame)
+    headerFrame.grid(row=0,column=0,sticky=tk.N)
+    settingsFrame = nb.Frame(frame)
+    settingsFrame.grid(row=1,column=0,padx=4,pady=4,sticky=tk.S)
+
+    nb.Label(headerFrame, text='=-0-= HelpfulLinks v{} by L33#7732 (Discord) =-0-='.format(version)).grid(row=0,column=0,padx=4,pady=4,sticky=tk.W)
+    nb.Label(settingsFrame, text='#').grid(row=0,column=0,padx=4,pady=4,sticky=tk.W)
+    nb.Label(settingsFrame, text='Enabled').grid(row=0,column=1,padx=4,pady=4,sticky=tk.W)
+    nb.Label(settingsFrame, text='Name').grid(row=0,column=2,padx=4,pady=4,sticky=tk.W)
+    nb.Label(settingsFrame, text='Link').grid(row=0,column=3,padx=4,pady=4,sticky=tk.W)
     for i in range(totalLinks):
 
         link_Enabled = tk.IntVar(value='0')
@@ -49,14 +63,14 @@ def plugin_prefs(parent, cmdr, is_beta):
         name = this.linkPreferences[i]['name']
         value = this.linkPreferences[i]['value']
 
-        nb.Label(frame, text=i+1).grid(row=i+1,column=0,padx=4,pady=4,sticky=tk.W)
-        link_E = nb.Checkbutton(frame, variable=link_Enabled)
+        nb.Label(settingsFrame, text=i+1).grid(row=i+1,column=0,padx=4,pady=4,sticky=tk.W)
+        link_E = nb.Checkbutton(settingsFrame, variable=link_Enabled)
         link_E.grid(row=i+1,column=1,padx=4,pady=4,sticky=tk.W)
-        link_N = nb.Entry(frame)
+        link_N = nb.Entry(settingsFrame)
         link_N.grid(row=i+1,column=2,padx=4,pady=4,sticky=tk.W)
         link_N.config(width=25)
         link_N.insert(0,name)
-        link_V = nb.Entry(frame)
+        link_V = nb.Entry(settingsFrame)
         link_V.grid(row=i+1,column=3,padx=4,pady=4,sticky=tk.W)
         link_V.config(width=25)
         link_V.insert(0,value)
@@ -102,15 +116,18 @@ def updateMainWindow():
         label['text'] = activeLinks[row]['name']
         label['justify'] = tk.CENTER
         label['cursor'] = 'hand2'
-        label['fg'] = 'blue'
         label.bind('<Button-1>',lambda x, url=activeLinks[row]['value']: webbrowser.open_new(url))
         label.pack()
         row += 1
+
+    theme.update(this.frame)
 
     return
 
 # Called when the plugin is started by EDMC
 def plugin_start(plugin_dir):
+    if not config.get('version') or config.get('version') == version: config.delete('prefs') 
+    config.set('version',version)
     this.linkPreferences = json.loads(config.get('prefs') or json.dumps(initializeSettings()))
     this.linkLabels = list()
     return "HelpfulLinks"
