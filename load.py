@@ -13,7 +13,7 @@ from theme import theme
 
 this = sys.modules[__name__]
 
-# Global Variables
+# Global Variables!
 totalLinks = 14
 version = '1.0.7'
 defaultLinks = [
